@@ -1,4 +1,14 @@
+using BookCloud.Data;
+using BookCloud.Repositories;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.AddTransient<RepositoryUsuarios>();
+
+builder.Services.AddDbContext<BookCloudContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("BookCloud")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -22,7 +32,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Auth}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 
