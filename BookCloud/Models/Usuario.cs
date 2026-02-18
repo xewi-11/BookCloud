@@ -23,7 +23,7 @@ namespace BookCloud.Models
         public DateTime FechaRegistro { get; set; }
         [Column("Activo")]
         public bool Activo { get; set; }
-        [Column("Foto")]
+        [Column("FotoUrl")]
 
         public string? Foto { get; set; }
     }
