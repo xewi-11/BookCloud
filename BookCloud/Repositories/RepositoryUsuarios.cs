@@ -1,10 +1,11 @@
 ﻿using BookCloud.Data;
 using BookCloud.Models;
+using BookCloud.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookCloud.Repositories
 {
-    public class RepositoryUsuarios
+    public class RepositoryUsuarios : IRepositoryUsuarios
     {
         private BookCloudContext _context;
 
@@ -22,6 +23,15 @@ namespace BookCloud.Repositories
             await this._context.SaveChangesAsync();
         }
 
+        public async Task<Usuario> GetInfoUsario(string id)
+        {
+            var consulta = from datos in this._context.Usuarios
+                           where datos.Id.ToString() == id
+                           select datos;
+
+            return await consulta.FirstOrDefaultAsync();
+        }
+
         public async Task<Usuario> GetUserByEmail(string email)
         {
 
@@ -36,6 +46,11 @@ namespace BookCloud.Repositories
                 return user;
             }
             return null;
+        }
+        public async Task ActualizarUsuarioAsync(Usuario user)
+        {
+            _context.Usuarios.Update(user);
+            await _context.SaveChangesAsync();
         }
     }
 }

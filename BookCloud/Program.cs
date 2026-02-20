@@ -3,7 +3,13 @@ using BookCloud.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
 
+    options.IdleTimeout = TimeSpan.FromMinutes(10);
+
+});
 
 builder.Services.AddTransient<RepositoryUsuarios>();
 
@@ -29,7 +35,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-
+app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}")

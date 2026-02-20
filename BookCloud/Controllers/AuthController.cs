@@ -61,6 +61,9 @@ namespace BookCloud.Controllers
                 {
                     // Autenticación exitosa
                     // Aquí puedes establecer la sesión o el token de autenticación
+                    HttpContext.Session.SetString("Id", s.Id.ToString());
+                    HttpContext.Session.SetString("Nombre", s.Nombre);
+                    HttpContext.Session.SetString("Correo", s.Correo);
                     return RedirectToAction("Index", "Home");
                 }
             }

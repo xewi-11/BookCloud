@@ -1,0 +1,102 @@
+﻿@model Usuario
+
+@{
+    ViewData["Title"] = "Perfil";
+}
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (Model != null)
+{
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Mi Perfil</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Preview de la foto actual -->
+                        <div class="text-center mb-4">
+                            <img id="previewFoto"
+                                 src="@(string.IsNullOrEmpty(Model.Foto) ? "/imagenes/usuarios/default-avatar.png" : Model.Foto)"
+                                 class="img-thumbnail rounded-circle"
+                                 alt="Foto de perfil"
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+
+                        <form asp-action="ActualizarPerfil" asp-controller="Usuario" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="Id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label for="foto" class="form-label">Cambiar foto de perfil</label>
+                                <input type="file"
+                                       class="form-control"
+                                       id="foto"
+                                       name="Foto"
+                                       accept="image/jpeg,image/png,image/gif"
+                                       onchange="previewImage(this)">
+                                <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="Nombre" value="@Model.Nombre" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="correo" name="Correo" value="@Model.Correo" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="contraseña" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="contraseña" name="Contraseña" placeholder="Nueva contraseña (dejar en blanco para mantener)">
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                <a href="@Url.Action("AñadirLibro", "Libro")" class="btn btn-secondary">Añadir libro</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                // Validar tamaño (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es demasiado grande. Tamaño máximo: 5MB');
+                    input.value = '';
+                    return;
+                }
+                // Preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewFoto').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}
