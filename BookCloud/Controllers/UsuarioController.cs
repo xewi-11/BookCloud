@@ -9,10 +9,10 @@ namespace BookCloud.Controllers
     {
         private RepositoryUsuarios _repo;
         private readonly FotoUsuario _fotoHelper;
-        public UsuarioController(RepositoryUsuarios repo)
+        public UsuarioController(RepositoryUsuarios repo, FotoUsuario helper)
         {
             this._repo = repo;
-            this._fotoHelper = new FotoUsuario();
+            this._fotoHelper = helper;
         }
         public async Task<IActionResult> IndexPerfil()
         {
@@ -21,6 +21,12 @@ namespace BookCloud.Controllers
                 return RedirectToAction("Index", "Auth");
 
             Usuario user = await _repo.GetInfoUsario(idUsuario);
+            if (user.Foto != null)
+            {
+                string pathweb = this._fotoHelper.MapUrlPath(user.Foto, Folder.Usuarios, user.Id);
+
+                ViewData["PATHWEB"] = pathweb;
+            }
             return View(user);
         }
 
@@ -46,31 +52,28 @@ namespace BookCloud.Controllers
                 // Actualizar contraseña solo si se proporcionó una nueva
                 if (!string.IsNullOrWhiteSpace(Contraseña))
                 {
-                    // Generar nuevo salt y hashear la contraseña
-                    string nuevoSalt = Encryption.GenerateSalt();
-                    byte[] passwordHash = Encryption.EncryptPassword(Contraseña, nuevoSalt);
 
-                    usuarioExistente.Salt = nuevoSalt;
+                    // Generar nuevo salt y hashear la contraseña
+
+                    byte[] passwordHash = Encryption.EncryptPassword(Contraseña, usuarioExistente.Salt);
                     usuarioExistente.PassWordHash = passwordHash;
                 }
 
                 // Procesar foto si se subió una nueva
                 if (Foto != null && Foto.Length > 0)
                 {
-                    var resultado = await _fotoHelper.GuardarFotoAsync(Foto, idUsuario);
-                    if (resultado.exito)
-                    {
-                        // Eliminar foto anterior si existe
-                        if (!string.IsNullOrEmpty(usuarioExistente.Foto))
-                            _fotoHelper.EliminarFoto(usuarioExistente.Foto);
+                    string fileName = Foto.FileName;
+                    string fileNameWithId = $"{usuarioExistente.Id}{fileName}";
+                    usuarioExistente.Foto = fileNameWithId;
 
-                        usuarioExistente.Foto = resultado.rutaRelativa;
-                    }
-                    else
+                    string path = this._fotoHelper.MapPath(fileName, Folder.Usuarios, usuarioExistente.Id);
+                    using (Stream stream = new FileStream(path, FileMode.Create))
                     {
-                        TempData["Error"] = resultado.error;
-                        return View("IndexPerfil", usuarioExistente);
+                        await Foto.CopyToAsync(stream);
                     }
+                    string pathweb = this._fotoHelper.MapUrlPath(fileName, Folder.Usuarios, usuarioExistente.Id);
+                    ViewData["PATHWEB"] = pathweb;
+
                 }
 
                 // Guardar cambios en BD

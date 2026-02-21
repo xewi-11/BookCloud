@@ -33,7 +33,7 @@
                         <!-- Preview de la foto actual -->
                         <div class="text-center mb-4">
                             <img id="previewFoto"
-                                 src="@(string.IsNullOrEmpty(Model.Foto) ? "/imagenes/usuarios/default-avatar.png" : Model.Foto)"
+                                 src='@ViewData["PATHWEB"]'
                                  class="img-thumbnail rounded-circle"
                                  alt="Foto de perfil"
                                  style="width: 150px; height: 150px; object-fit: cover;">

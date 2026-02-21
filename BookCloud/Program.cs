@@ -1,9 +1,11 @@
 using BookCloud.Data;
+using BookCloud.Helpers;
 using BookCloud.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSingleton<FotoUsuario>();
 builder.Services.AddSession(options =>
 {
 

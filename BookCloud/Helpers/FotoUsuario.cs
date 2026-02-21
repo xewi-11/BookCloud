@@ -1,81 +1,45 @@
-﻿namespace BookCloud.Helpers
+﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+
+namespace BookCloud.Helpers
 {
+    public enum Folder { Usuarios }
     public class FotoUsuario
     {
-        private readonly string _rutaBase = "wwwroot/imagenes/usuarios";
-        private readonly long _tamañoMaximoBytes = 5 * 1024 * 1024; // 5MB
-        private readonly string[] _extensionesPermitidas = { ".jpg", ".jpeg", ".png", ".gif" };
-
-
-        public async Task<(bool exito, string? rutaRelativa, string? error)> GuardarFotoAsync(IFormFile archivo, string idUsuario)
+        private IWebHostEnvironment webHostEnvironment;
+        private IServer server;
+        public FotoUsuario(IWebHostEnvironment webHostEnvironment, IServer server)
         {
-            // Validar que el archivo existe
-            if (archivo == null || archivo.Length == 0)
-                return (false, null, "No se proporcionó ningún archivo");
-
-            // Validar tamaño
-            if (archivo.Length > _tamañoMaximoBytes)
-                return (false, null, $"El archivo excede el tamaño máximo de {_tamañoMaximoBytes / 1024 / 1024}MB");
-
-            // Validar extensión
-            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-            if (!_extensionesPermitidas.Contains(extension))
-                return (false, null, "Formato de imagen no permitido. Use JPG, PNG o GIF");
-
-            try
+            this.webHostEnvironment = webHostEnvironment;
+            this.server = server;
+        }
+        public string MapPath(string fileName, Folder folder, int userId)
+        {
+            if (folder == Folder.Usuarios)
             {
-                // Crear directorio si no existe
-                var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), _rutaBase);
-                if (!Directory.Exists(rutaCompleta))
-                    Directory.CreateDirectory(rutaCompleta);
-
-                // Generar nombre único para evitar colisiones
-                var nombreArchivo = $"{idUsuario}_{Guid.NewGuid()}{extension}";
-                var rutaArchivo = Path.Combine(rutaCompleta, nombreArchivo);
-
-                // Guardar archivo físico
-                using (var stream = new FileStream(rutaArchivo, FileMode.Create))
-                {
-                    await archivo.CopyToAsync(stream);
-                }
-
-                // Retornar ruta relativa para guardar en BD
-                var rutaRelativa = $"/imagenes/usuarios/{nombreArchivo}";
-                return (true, rutaRelativa, null);
+                string carpeta = "usuarios";
+                string rootPath = this.webHostEnvironment.WebRootPath;
+                string fileNameWithId = $"{userId}{fileName}";
+                return Path.Combine(rootPath, "imagenes", carpeta, fileNameWithId);
             }
-            catch (Exception ex)
+            else
             {
-                return (false, null, $"Error al guardar la imagen: {ex.Message}");
+                return "Folder no reconocido";
             }
         }
-        public bool EliminarFoto(string rutaRelativa)
+        public string MapUrlPath(string fileName, Folder folder, int userId)
         {
-            try
+            if (folder == Folder.Usuarios)
             {
-                if (string.IsNullOrEmpty(rutaRelativa))
-                    return false;
-
-                var rutaCompleta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", rutaRelativa.TrimStart('/'));
-                if (File.Exists(rutaCompleta))
-                {
-                    File.Delete(rutaCompleta);
-                    return true;
-                }
-                return false;
+                string carpeta = "usuarios";
+                var adresses = this.server.Features.Get<IServerAddressesFeature>().Addresses;
+                string serverUrl = adresses.FirstOrDefault()?.ToString();
+                return $"{serverUrl}/imagenes/{carpeta}/{fileName}";
             }
-            catch
+            else
             {
-                return false;
+                return "Folder no reconocido";
             }
-        }
-
-        public bool ValidarImagen(IFormFile archivo)
-        {
-            if (archivo == null || archivo.Length == 0)
-                return false;
-
-            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-            return _extensionesPermitidas.Contains(extension) && archivo.Length <= _tamañoMaximoBytes;
         }
     }
 }
