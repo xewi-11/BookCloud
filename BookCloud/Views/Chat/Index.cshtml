@@ -1,0 +1,85 @@
+@model List<BookCloud.Models.Chat>
+@{
+    ViewData["Title"] = "Mis Chats";
+    var usuarioActualId = (int)ViewBag.UsuarioActualId;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-chat-dots-fill"></i> Mis Conversaciones</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No tienes conversaciones aún. ¡Empieza a chatear con otros usuarios desde sus libros!
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var chat in Model)
+            {
+                var otroUsuario = chat.Usuario1Id == usuarioActualId ? chat.Usuario2 : chat.Usuario1;
+                var ultimoMensaje = chat.Mensajes.FirstOrDefault();
+                
+                <a href="@Url.Action("Conversacion", new { id = chat.Id })" 
+                   class="list-group-item list-group-item-action hover-shadow">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img src="@(otroUsuario?.Foto ?? "/images/default-avatar.png")" 
+                                 alt="@otroUsuario?.Nombre"
+                                 class="rounded-circle me-3 border"
+                                 style="width: 55px; height: 55px; object-fit: cover;">
+                            <div>
+                                <h5 class="mb-1 fw-bold">@otroUsuario?.Nombre</h5>
+                                @if (ultimoMensaje != null)
+                                {
+                                    <p class="mb-0 text-muted small">
+                                        @{
+                                            var texto = ultimoMensaje.Contenido;
+                                            var maxLength = 60;
+                                        }
+                                        @(texto.Length > maxLength ? texto.Substring(0, maxLength) + "..." : texto)
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="mb-0 text-muted small fst-italic">Sin mensajes</p>
+                                }
+                            </div>
+                        </div>
+                        @if (ultimoMensaje != null)
+                        {
+                            <small class="text-muted">
+                                @{
+                                    var diff = DateTime.Now - ultimoMensaje.FechaEnvio;
+                                    var tiempo = diff.TotalDays >= 1 
+                                        ? ultimoMensaje.FechaEnvio.ToString("dd/MM") 
+                                        : ultimoMensaje.FechaEnvio.ToString("HH:mm");
+                                }
+                                @tiempo
+                            </small>
+                        }
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+</style>

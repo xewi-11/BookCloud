@@ -1,0 +1,250 @@
+﻿@model List<BookCloud.Models.Mensaje>
+@{
+    ViewData["Title"] = "Chat";
+    var chatId = (int)ViewBag.ChatId;
+    var usuarioActualId = (int)ViewBag.UsuarioActualId;
+    var otroUsuario = (BookCloud.Models.Usuario)ViewBag.OtroUsuario;
+    var libro = ViewBag.Libro as BookCloud.Models.Libro;
+}
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 56px); /* Restamos la altura del navbar si existe */
+    }
+
+    .chat-header {
+        flex-shrink: 0;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        background-color: #e9ecef;
+    }
+
+    .chat-input {
+        flex-shrink: 0;
+        background-color: white;
+        border-top: 1px solid #dee2e6;
+    }
+
+    #mensajesContainer::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #mensajesContainer::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    #mensajesContainer::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    #mensajesContainer::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+
+<div class="chat-container">
+    <!-- Header con información del libro -->
+    <div class="chat-header bg-primary text-white p-3 shadow-sm">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index")" class="btn btn-outline-light btn-sm me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                
+                <div>
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>@otroUsuario?.Nombre
+                    </h5>
+                    @if (libro != null)
+                    {
+                        <small class="text-white-50">
+                            <i class="bi bi-book"></i> Conversación sobre: @libro.Titulo
+                        </small>
+                    }
+                </div>
+            </div>
+            
+            @* Foto del libro a la derecha *@
+            @if (libro != null)
+            {
+                <a asp-controller="Libro" asp-action="Details" asp-route-id="@libro.Id" 
+                   class="text-decoration-none" title="Ver libro">
+                    <div class="d-flex align-items-center bg-white bg-opacity-25 rounded p-2">
+                        <img src="~/imagenes/Libros/@libro.Foto" 
+                             alt="@libro.Titulo"
+                             class="rounded me-2"
+                             style="width: 50px; height: 70px; object-fit: cover;">
+                        <div class="text-white text-end">
+                            <small class="d-block fw-bold">@libro.Titulo</small>
+                            <small class="d-block">$@libro.Precio.ToString("N2")</small>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Área de mensajes -->
+    <div id="mensajesContainer" class="chat-messages p-4">
+        @if (Model.Any())
+        {
+            @foreach (var mensaje in Model)
+            {
+                var esMio = mensaje.RemitenteId == usuarioActualId;
+                <div class="d-flex mb-3 @(esMio ? "justify-content-end" : "justify-content-start")" data-mensaje-id="@mensaje.Id">
+                    @if (!esMio)
+                    {
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                             style="width: 32px; height: 32px; font-weight: bold; flex-shrink: 0; align-self: end;">
+                            @otroUsuario?.Nombre?.Substring(0, 1).ToUpper()
+                        </div>
+                    }
+                    <div class="@(esMio ? "bg-primary text-white" : "bg-white") rounded-3 p-3 shadow-sm" 
+                         style="max-width: 65%;">
+                        <p class="mb-1">@mensaje.Contenido</p>
+                        <small class="@(esMio ? "text-white-50" : "text-muted") d-block text-end">
+                            @mensaje.FechaEnvio.ToString("HH:mm")
+                        </small>
+                    </div>
+                    @if (esMio)
+                    {
+                        var miNombre = Context.Session.GetString("Nombre");
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center ms-2" 
+                             style="width: 32px; height: 32px; font-weight: bold; flex-shrink: 0; align-self: end;">
+                            @miNombre?.Substring(0, 1).ToUpper()
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center text-muted mt-5">
+                <i class="bi bi-chat-dots" style="font-size: 3rem;"></i>
+                <p class="mt-3">No hay mensajes aún. ¡Inicia la conversación!</p>
+            </div>
+        }
+    </div>
+
+    <!-- Input de mensaje -->
+    <div class="chat-input p-3 shadow-sm">
+        <form id="formMensaje" class="d-flex gap-2">
+            <input type="text" 
+                   id="inputMensaje" 
+                   class="form-control form-control-lg" 
+                   placeholder="Escribe un mensaje..."
+                   autocomplete="off"
+                   maxlength="500"
+                   required>
+            <button type="submit" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script>
+        const chatId = @chatId;
+        const usuarioActualId = @usuarioActualId;
+        const otroUsuarioNombre = "@otroUsuario?.Nombre";
+        const miNombre = "@Context.Session.GetString("Nombre")";
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("RecibirMensaje", (mensaje) => {
+            agregarMensajeAlDOM(mensaje);
+        });
+
+        connection.start()
+            .then(() => {
+                console.log("✅ Conectado a SignalR");
+                connection.invoke("UnirseAlChat", chatId);
+            })
+            .catch(err => {
+                console.error("❌ Error al conectar:", err);
+                alert("Error de conexión. Recarga la página.");
+            });
+
+        connection.onreconnecting(() => {
+            console.log("🔄 Reconectando...");
+        });
+
+        connection.onreconnected(() => {
+            console.log("✅ Reconectado");
+            connection.invoke("UnirseAlChat", chatId);
+        });
+
+        document.getElementById("formMensaje").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const input = document.getElementById("inputMensaje");
+            const contenido = input.value.trim();
+            
+            if (contenido && connection.state === signalR.HubConnectionState.Connected) {
+                try {
+                    await connection.invoke("EnviarMensaje", chatId, usuarioActualId, contenido);
+                    input.value = "";
+                    input.focus();
+                } catch (err) {
+                    console.error("❌ Error al enviar mensaje:", err);
+                    alert("Error al enviar el mensaje. Intenta de nuevo.");
+                }
+            }
+        });
+
+        function agregarMensajeAlDOM(mensaje) {
+            const container = document.getElementById("mensajesContainer");
+            const esMio = mensaje.remitenteId === usuarioActualId;
+            
+            const inicial = esMio ? miNombre.substring(0, 1).toUpperCase() : otroUsuarioNombre.substring(0, 1).toUpperCase();
+            const colorAvatar = esMio ? 'bg-secondary' : 'bg-primary';
+            
+            const mensajeHTML = `
+                <div class="d-flex mb-3 ${esMio ? 'justify-content-end' : 'justify-content-start'}" data-mensaje-id="${mensaje.id}">
+                    ${!esMio ? `<div class="rounded-circle ${colorAvatar} text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-weight: bold; flex-shrink: 0; align-self: end;">${inicial}</div>` : ''}
+                    <div class="${esMio ? 'bg-primary text-white' : 'bg-white'} rounded-3 p-3 shadow-sm" style="max-width: 65%;">
+                        <p class="mb-1">${escapeHtml(mensaje.contenido)}</p>
+                        <small class="${esMio ? 'text-white-50' : 'text-muted'} d-block text-end">
+                            ${mensaje.fechaEnvio}
+                        </small>
+                    </div>
+                    ${esMio ? `<div class="rounded-circle ${colorAvatar} text-white d-flex align-items-center justify-content-center ms-2" style="width: 32px; height: 32px; font-weight: bold; flex-shrink: 0; align-self: end;">${inicial}</div>` : ''}
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', mensajeHTML);
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById("mensajesContainer");
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.addEventListener('load', scrollToBottom);
+    </script>
+}

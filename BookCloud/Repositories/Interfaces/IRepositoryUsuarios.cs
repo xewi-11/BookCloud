@@ -10,5 +10,6 @@ namespace BookCloud.Repositories.Interfaces
         Task ActualizarUsuarioAsync(Usuario user);
         Task ActualizarSeguridadUsuarioAsync(UsuarioSeguridad seguridad);
         Task<UsuarioSeguridad> GetSeguridadUsuario(int idUsuario);
+        Task<Usuario?> GetUserById(int id);
     }
 }

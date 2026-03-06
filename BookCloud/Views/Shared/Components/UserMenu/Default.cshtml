@@ -1,4 +1,4 @@
-@using BookCloud.Models
+﻿    @using BookCloud.Models
 @using BookCloud.Repositories.Interfaces
 @inject IRepositoryWallet RepoWallet
 
@@ -19,7 +19,7 @@
 
 @if (isAuthenticated)
 {
-    <!-- Usuario autenticado: Men� desplegable -->
+    <!-- Usuario autenticado: Menú desplegable -->
     <ul class="navbar-nav">
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
@@ -51,7 +51,8 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" asp-controller="Favoritos" asp-action="Index">
+                    @* ✅ CORRECCIÓN: Cambiar "Favoritos" por "Favorito" *@
+                    <a class="dropdown-item" asp-controller="Favorito" asp-action="Index">
                         <i class="bi bi-heart"></i> Favoritos
                     </a>
                 </li>
@@ -78,7 +79,7 @@
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <a class="dropdown-item text-danger" asp-controller="Auth" asp-action="Logout">
-                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesi�n
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                     </a>
                 </li>
             </ul>
@@ -87,18 +88,16 @@
 }
 else
 {
-    <!-- Usuario NO autenticado: Botones Login/Registro -->
+    <!-- Usuario no autenticado: Enlaces Login/Register -->
     <ul class="navbar-nav">
         <li class="nav-item">
             <a class="nav-link" asp-controller="Auth" asp-action="Login">
-                <i class="bi bi-box-arrow-in-right"></i>
-                <span class="d-none d-lg-inline">Iniciar Sesi�n</span>
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link btn-outline-gold-nav" asp-controller="Auth" asp-action="RegisterUser">
-                <i class="bi bi-person-plus"></i>
-                <span class="d-none d-lg-inline">Registrarse</span>
+            <a class="nav-link" asp-controller="Auth" asp-action="RegisterUser">
+                <i class="bi bi-person-plus"></i> Registrarse
             </a>
         </li>
     </ul>

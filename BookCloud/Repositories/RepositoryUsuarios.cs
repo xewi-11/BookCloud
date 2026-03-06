@@ -49,6 +49,12 @@ namespace BookCloud.Repositories
                 .FirstOrDefaultAsync(u => u.Correo == email);
         }
 
+        public async Task<Usuario?> GetUserById(int id)
+        {
+            return await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Id == id && u.Activo);
+        }
+
         public async Task ActualizarUsuarioAsync(Usuario user)
         {
             _context.Usuarios.Update(user);

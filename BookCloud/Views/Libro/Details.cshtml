@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = Model.Titulo;
+    var usuarioActualId = Context.Session.GetString("Id");
+    var esPropio = Model.UsuarioId.ToString() == usuarioActualId;
 }
 
 <div class="details-container">
@@ -82,7 +84,20 @@
                         }
                     </div>
 
-                    @if (Model.UsuarioId.ToString() == Context.Session.GetString("Id"))
+                    @* ✅ Pasar el libroId al iniciar el chat *@
+                    @if (!esPropio && !string.IsNullOrEmpty(usuarioActualId))
+                    {
+                        <div class="divider"></div>
+                        <a asp-controller="Chat" 
+                           asp-action="IniciarChat" 
+                           asp-route-usuarioId="@Model.UsuarioId"
+                           asp-route-libroId="@Model.Id"
+                           class="btn btn-outline-primary w-100">
+                            <i class="bi bi-chat-fill"></i> Contactar al Vendedor sobre este Libro
+                        </a>
+                    }
+
+                    @if (esPropio)
                     {
                         <div class="divider"></div>
                         <div class="d-flex gap-3">

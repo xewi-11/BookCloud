@@ -70,6 +70,11 @@ namespace BookCloud.Controllers
                     HttpContext.Session.SetString("Id", s.Id.ToString());
                     HttpContext.Session.SetString("Nombre", s.Nombre);
                     HttpContext.Session.SetString("Correo", s.Correo);
+                    // ✅ Agregar foto a la sesión
+                    if (!string.IsNullOrEmpty(s.Foto))
+                    {
+                        HttpContext.Session.SetString("FOTO", s.Foto);
+                    }
                     return RedirectToAction("Index", "Libro");
                 }
             }
