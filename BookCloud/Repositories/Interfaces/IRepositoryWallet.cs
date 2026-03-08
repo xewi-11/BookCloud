@@ -9,5 +9,8 @@ namespace BookCloud.Repositories.Interfaces
         Task RecargarSaldo(int usuarioId, decimal monto, string descripcion);
         Task DescontarSaldo(int usuarioId, int pedidoId, decimal monto, string descripcion);
         Task<bool> TieneSaldoSuficiente(int usuarioId, decimal monto);
+        
+        // ? Nuevo método para transferir saldo a vendedores
+        Task TransferirSaldoAVendedores(int pedidoId, int compradorId);
     }
 }

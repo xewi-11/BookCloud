@@ -1,4 +1,4 @@
-using BookCloud.Data;
+﻿using BookCloud.Data;
 using BookCloud.Models;
 using BookCloud.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -80,6 +80,49 @@ namespace BookCloud.Repositories
         {
             var saldo = await GetSaldoUsuario(usuarioId);
             return saldo >= monto;
+        }
+
+        // ✅ Nuevo método para transferir saldo a los vendedores
+        public async Task TransferirSaldoAVendedores(int pedidoId, int compradorId)
+        {
+            // Obtener el pedido con sus detalles y libros
+            var pedido = await _context.Pedidos
+                .Include(p => p.PedidoDetalles)
+                    .ThenInclude(d => d.Libro)
+                .FirstOrDefaultAsync(p => p.Id == pedidoId);
+
+            if (pedido == null)
+                throw new InvalidOperationException($"No se encontró el pedido #{pedidoId}");
+
+            // Agrupar por vendedor (UsuarioId del libro)
+            var ventasPorVendedor = pedido.PedidoDetalles
+                .Where(d => d.Activo)
+                .GroupBy(d => d.Libro.UsuarioId)
+                .Select(g => new
+                {
+                    VendedorId = g.Key,
+                    TotalVenta = g.Sum(d => d.PrecioUnitario * d.Cantidad)
+                })
+                .ToList();
+
+            // Crear movimientos de ingreso para cada vendedor
+            foreach (var venta in ventasPorVendedor)
+            {
+                var movimiento = new SaldoMovimiento
+                {
+                    UsuarioId = venta.VendedorId,
+                    PedidoId = pedidoId,
+                    Monto = venta.TotalVenta,
+                    Tipo = "Ingreso",
+                    Descripcion = $"Venta de libro(s) - Pedido #{pedidoId}",
+                    Fecha = DateTime.Now,
+                    Activo = true
+                };
+
+                await _context.SaldoMovimientos.AddAsync(movimiento);
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -44,8 +44,9 @@
                 {
                     <div class="carrito-item">
                         <div class="carrito-item-image">
-                            <img src="@(item.Foto ?? "/images/default-book.jpg")" 
-                                 alt="@item.Titulo" />
+                            <img src="~/imagenes/Libros/@item.Foto" 
+                                 alt="@item.Titulo" 
+                                 onerror="this.src='/images/default-book.jpg'" />
                         </div>
 
                         <div class="carrito-item-details">

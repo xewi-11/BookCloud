@@ -71,6 +71,8 @@ namespace BookCloud.Repositories
         {
             return await _context.Pedidos
                 .Include(p => p.PedidoDetalles)
+                    .ThenInclude(pd => pd.Libro)
+                .Include(p => p.Pagos)
                 .Where(p => p.UsuarioId == usuarioId && p.Activo)
                 .OrderByDescending(p => p.FechaPedido)
                 .ToListAsync();

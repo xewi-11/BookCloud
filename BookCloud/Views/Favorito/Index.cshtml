@@ -4,56 +4,93 @@
     ViewData["Title"] = "Mis Favoritos";
 }
 
-<div class="container mt-4">
-    <h2>📚 Mis Libros Favoritos</h2>
-    <hr />
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="section-title mb-0">
+            <i class="bi bi-heart-fill"></i> Mis Libros Favoritos
+        </h1>
+        <a asp-controller="Libro" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Catálogo
+        </a>
+    </div>
 
-    @if (ViewData["MENSAJE"] != null)
+    @if (TempData["Success"] != null)
     {
-        <div class="alert alert-info">
-            @ViewData["MENSAJE"]
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    @if (TempData["MENSAJE"] != null)
+    @if (TempData["Info"] != null)
     {
-        <div class="alert alert-success">
-            @TempData["MENSAJE"]
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle-fill"></i> @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    @if (Model == null || Model.Count == 0)
+    @if (TempData["Error"] != null)
     {
-        <div class="alert alert-warning">
-            <p>No tienes libros en favoritos. ¡Explora nuestro catálogo y agrega tus libros preferidos!</p>
-            <a asp-controller="Libro" asp-action="Index" class="btn btn-primary">Ver Libros</a>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-heart" style="font-size: 5rem; color: var(--dorado); opacity: 0.5;"></i>
+            <h3 class="mt-3">No tienes libros favoritos</h3>
+            <p class="text-muted">¡Explora nuestro catálogo y agrega tus libros preferidos!</p>
+            <a asp-controller="Libro" asp-action="Index" class="btn btn-primary mt-3">
+                <i class="bi bi-book"></i> Explorar Libros
+            </a>
         </div>
     }
     else
     {
-        <div class="row">
+        <div class="book-grid">
             @foreach (var libro in Model)
             {
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        @if (!string.IsNullOrEmpty(libro.Foto))
-                        {
-                            <img src="@libro.Foto" class="card-img-top" alt="@libro.Titulo" style="height: 300px; object-fit: cover;">
-                        }
-                        else
-                        {
-                            <img src="~/images/libro-default.jpg" class="card-img-top" alt="@libro.Titulo" style="height: 300px; object-fit: cover;">
-                        }
-                        <div class="card-body">
-                            <h5 class="card-title">@libro.Titulo</h5>
-                            <p class="card-text"><strong>Autor:</strong> @libro.Autor</p>
-                            <p class="card-text"><strong>Precio:</strong> $@libro.Precio.ToString("N2")</p>
-                            <p class="card-text text-muted">@(libro.Descripcion)...</p>
+                <div class="book-card animate-fade-in">
+                    <div class="position-relative overflow-hidden">
+                        <img src="~/imagenes/Libros/@libro.Foto" 
+                             alt="@libro.Titulo" 
+                             class="book-card-image" />
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-3">
+                            <i class="bi bi-heart-fill"></i> Favorito
+                        </span>
+                    </div>
+
+                    <div class="book-card-body">
+                        <h3 class="book-card-title">@libro.Titulo</h3>
+                        <p class="book-card-author">
+                            <i class="bi bi-person-fill"></i> @libro.Autor
+                        </p>
+                        <p class="book-card-description">@libro.Descripcion</p>
+
+                        <div class="book-card-footer">
+                            <div>
+                                <div class="book-card-price">$@libro.Precio.ToString("N2")</div>
+                                <div class="book-card-stock @(libro.Stock < 5 ? "low-stock" : "")">
+                                    <i class="bi bi-box-seam"></i> Stock: @libro.Stock
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer">
-                            <a asp-controller="Libro" asp-action="Details" asp-route-id="@libro.Id" class="btn btn-primary btn-sm">Ver Detalles</a>
-                            <a asp-controller="Favorito" asp-action="Index" asp-route-ideliminar="@libro.Id" class="btn btn-danger btn-sm">
-                                <i class="bi bi-heart-fill"></i> Quitar
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="d-flex gap-2 w-100">
+                            <a asp-controller="Libro" asp-action="Details" asp-route-id="@libro.Id" 
+                               class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="bi bi-eye-fill"></i> Ver Detalles
+                            </a>
+                            <a asp-controller="Favorito" asp-action="Eliminar" asp-route-libroId="@libro.Id" 
+                               class="btn btn-danger btn-sm" 
+                               title="Quitar de favoritos">
+                                <i class="bi bi-heart-fill"></i>
                             </a>
                         </div>
                     </div>
@@ -61,8 +98,22 @@
             }
         </div>
     }
-
-    <div class="mt-3">
-        <a asp-controller="Libro" asp-action="Index" class="btn btn-secondary">Volver al Catálogo</a>
-    </div>
 </div>
+
+<style>
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        border-radius: 20px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        margin: 2rem 0;
+    }
+
+    .empty-state h3 {
+        color: var(--texto-claro);
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+</style>

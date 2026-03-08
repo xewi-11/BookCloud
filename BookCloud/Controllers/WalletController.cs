@@ -4,6 +4,7 @@ using BookCloud.Models.ViewModels;
 using BookCloud.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace BookCloud.Controllers
 {
@@ -18,13 +19,21 @@ namespace BookCloud.Controllers
             _context = context;
         }
 
+        private int ObtenerUsuarioIdActual()
+        {
+            var usuarioIdString = HttpContext.Session.GetString("Id");
+            if (int.TryParse(usuarioIdString, out int usuarioId))
+            {
+                return usuarioId;
+            }
+            return 0;
+        }
+
         public async Task<IActionResult> Index()
         {
-            var userIdStr = HttpContext.Session.GetString("Id");
-            if (string.IsNullOrEmpty(userIdStr))
+            var usuarioId = ObtenerUsuarioIdActual();
+            if (usuarioId == 0)
                 return RedirectToAction("Login", "Auth");
-
-            int usuarioId = int.Parse(userIdStr);
 
             var viewModel = new WalletViewModel
             {
@@ -47,11 +56,9 @@ namespace BookCloud.Controllers
         [HttpGet]
         public async Task<IActionResult> Movimientos(int limite = 50, string filtro = "Todos")
         {
-            var userIdStr = HttpContext.Session.GetString("Id");
-            if (string.IsNullOrEmpty(userIdStr))
+            var usuarioId = ObtenerUsuarioIdActual();
+            if (usuarioId == 0)
                 return RedirectToAction("Login", "Auth");
-
-            int usuarioId = int.Parse(userIdStr);
 
             // Obtener movimientos de Wallet
             var movimientosWallet = await _context.SaldoMovimientos
@@ -125,31 +132,93 @@ namespace BookCloud.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RecargarSaldo(decimal monto)
+        public async Task<IActionResult> RecargarSaldo(RecargaTarjetaViewModel model)
         {
-            var userIdStr = HttpContext.Session.GetString("Id");
-            if (string.IsNullOrEmpty(userIdStr))
+            var usuarioId = ObtenerUsuarioIdActual();
+            if (usuarioId == 0)
                 return RedirectToAction("Login", "Auth");
 
-            int usuarioId = int.Parse(userIdStr);
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Por favor, completa correctamente todos los campos de la tarjeta.";
+                return RedirectToAction("Index");
+            }
 
             try
             {
-                if (monto < 1 || monto > 10000)
+                // Validar tarjeta (algoritmo de Luhn)
+                if (!ValidarNumeroTarjeta(model.NumeroTarjeta.Replace(" ", "")))
                 {
-                    TempData["Error"] = "El monto debe estar entre $1 y $10,000";
+                    TempData["Error"] = "El número de tarjeta no es válido.";
                     return RedirectToAction("Index");
                 }
 
-                await _repoWallet.RecargarSaldo(usuarioId, monto, $"Recarga de ${monto:N2}");
-                TempData["Mensaje"] = $"¡Recarga exitosa! Se agregaron ${monto:N2} a tu wallet.";
+                // Validar fecha de vencimiento
+                if (!ValidarFechaVencimiento(model.FechaVencimiento))
+                {
+                    TempData["Error"] = "La tarjeta ha vencido o la fecha no es válida.";
+                    return RedirectToAction("Index");
+                }
+
+                // Simular procesamiento de pago (en producción, aquí integrarías con Stripe, PayPal, etc.)
+                await Task.Delay(1000); // Simulando latencia de API de pago
+
+                // Registrar recarga en la wallet
+                var ultimosDigitos = model.NumeroTarjeta.Replace(" ", "").Substring(model.NumeroTarjeta.Replace(" ", "").Length - 4);
+                var descripcion = $"Recarga con tarjeta ****{ultimosDigitos}";
+
+                await _repoWallet.RecargarSaldo(usuarioId, model.Monto, descripcion);
+
+                TempData["Mensaje"] = $"¡Recarga exitosa! Se agregaron ${model.Monto:N2} a tu wallet.";
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al recargar: {ex.Message}";
+                TempData["Error"] = $"Error al procesar el pago: {ex.Message}";
             }
 
             return RedirectToAction("Index");
         }
+
+        // Algoritmo de Luhn para validar números de tarjeta
+        private bool ValidarNumeroTarjeta(string numero)
+        {
+            if (string.IsNullOrEmpty(numero) || !Regex.IsMatch(numero, @"^\d+$"))
+                return false;
+
+            int suma = 0;
+            bool alternar = false;
+
+            for (int i = numero.Length - 1; i >= 0; i--)
+            {
+                int digito = int.Parse(numero[i].ToString());
+
+                if (alternar)
+                {
+                    digito *= 2;
+                    if (digito > 9)
+                        digito -= 9;
+                }
+
+                suma += digito;
+                alternar = !alternar;
+            }
+
+            return (suma % 10) == 0;
+        }
+
+        // Validar que la tarjeta no haya vencido
+        private bool ValidarFechaVencimiento(string fecha)
+        {
+            if (string.IsNullOrEmpty(fecha) || !Regex.IsMatch(fecha, @"^(0[1-9]|1[0-2])\/\d{2}$"))
+                return false;
+
+            var partes = fecha.Split('/');
+            int mes = int.Parse(partes[0]);
+            int anio = 2000 + int.Parse(partes[1]);
+
+            var fechaVencimiento = new DateTime(anio, mes, DateTime.DaysInMonth(anio, mes));
+            return fechaVencimiento >= DateTime.Now;
+        }
+
     }
 }

@@ -5,7 +5,7 @@ namespace BookCloud.Models.ViewModels
     public class DatosTarjetaViewModel
     {
         [Required(ErrorMessage = "El número de tarjeta es obligatorio")]
-        [RegularExpression(@"^\d{16}$", ErrorMessage = "El número de tarjeta debe tener 16 dígitos")]
+        [RegularExpression(@"^[\d\s]{13,19}$", ErrorMessage = "El número de tarjeta debe tener entre 13 y 19 dígitos")]
         [Display(Name = "Número de tarjeta")]
         public string NumeroTarjeta { get; set; }
 

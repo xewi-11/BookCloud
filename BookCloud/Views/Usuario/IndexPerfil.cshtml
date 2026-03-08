@@ -4,7 +4,239 @@
     ViewData["Title"] = "Mi Perfil";
 }
 
-<div class="container profile-container">
+<style>
+    .profile-wrapper {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .profile-card {
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        color: var(--verde-fondo);
+        padding: 2rem;
+        text-align: center;
+        border-bottom: 2px solid rgba(198, 167, 94, 0.3);
+    }
+
+    .profile-header h1 {
+        color: var(--verde-fondo);
+        font-weight: 800;
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .profile-body {
+        padding: 2.5rem;
+    }
+
+    .profile-image-section {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .profile-image-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-image {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid var(--dorado);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .profile-image-container:hover .profile-image {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(198, 167, 94, 0.6);
+    }
+
+    .profile-image-overlay {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid var(--verde-card);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .profile-image-overlay:hover {
+        transform: scale(1.1);
+    }
+
+    .profile-image-overlay i {
+        color: var(--verde-fondo);
+        font-size: 1.5rem;
+    }
+
+    .upload-label {
+        color: var(--dorado);
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        color: var(--dorado);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-label i {
+        font-size: 1.2rem;
+    }
+
+    .form-control {
+        background: rgba(19, 47, 40, 0.5);
+        border: 2px solid var(--dorado);
+        color: var(--texto-claro);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(19, 47, 40, 0.7);
+        border-color: var(--dorado-hover);
+        box-shadow: 0 0 0 0.2rem rgba(198, 167, 94, 0.25);
+        color: var(--texto-claro);
+    }
+
+    .form-control::placeholder {
+        color: var(--texto-secundario);
+    }
+
+    .form-control[type="file"] {
+        padding: 0.75rem;
+        cursor: pointer;
+    }
+
+    .form-control[type="file"]::-webkit-file-upload-button {
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        border: none;
+        color: var(--verde-fondo);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-right: 1rem;
+        cursor: pointer;
+    }
+
+    .form-control[type="file"]::-webkit-file-upload-button:hover {
+        transform: scale(1.05);
+    }
+
+    .text-muted {
+        color: var(--texto-secundario) !important;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--dorado), transparent);
+        margin: 2rem 0;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        border: none;
+        color: var(--verde-fondo);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(198, 167, 94, 0.4);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(198, 167, 94, 0.6);
+        color: var(--verde-fondo);
+    }
+
+    .btn-publish {
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        color: var(--dorado);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-publish:hover {
+        background: rgba(198, 167, 94, 0.1);
+        color: var(--dorado-hover);
+        border-color: var(--dorado-hover);
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .profile-body {
+            padding: 1.5rem;
+        }
+
+        .profile-header {
+            padding: 1.5rem;
+        }
+
+        .profile-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .profile-image {
+            width: 150px;
+            height: 150px;
+        }
+    }
+</style>
+
+<div class="profile-wrapper">
     @if (TempData["Mensaje"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -24,92 +256,98 @@
     @if (Model != null)
     {
         <div class="profile-card animate-fade-in">
-            <div class="text-center mb-4">
-                <h1 class="section-title mb-3">Mi Perfil</h1>
+            <div class="profile-header">
+                <h1><i class="bi bi-person-circle"></i> Mi Perfil</h1>
             </div>
 
-            <form asp-action="ActualizarPerfil" asp-controller="Usuario" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="Id" value="@Model.Id" />
+            <div class="profile-body">
+                <form asp-action="ActualizarPerfil" asp-controller="Usuario" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="Id" value="@Model.Id" />
 
-                <!-- Foto de perfil -->
-                <div class="profile-image-container">
-                    <img id="previewFoto"
-                         src='@ViewData["PATHWEB"]'
-                         class="profile-image"
-                         alt="Foto de perfil">
-                    <div class="profile-image-overlay">
-                        <i class="bi bi-camera-fill text-gold" style="font-size: 2.5rem;"></i>
-                    </div>
-                </div>
+                    <!-- Foto de perfil -->
+                    <div class="profile-image-section">
+                        <div class="profile-image-container">
+                            <img id="previewFoto"
+                                 src='@ViewData["PATHWEB"]'
+                                 class="profile-image"
+                                 alt="Foto de perfil">
+                            <div class="profile-image-overlay">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
+                        </div>
 
-                <div class="mb-4">
-                    <label for="foto" class="form-label text-center d-block">
-                        <i class="bi bi-image"></i> Cambiar foto de perfil
-                    </label>
-                    <input type="file"
-                           class="form-control"
-                           id="foto"
-                           name="Foto"
-                           accept="image/jpeg,image/png,image/gif"
-                           onchange="previewImage(this)">
-                    <small class="text-muted">Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="nombre" class="form-label">
-                            <i class="bi bi-person-badge"></i> Nombre completo
+                        <label for="foto" class="upload-label">
+                            <i class="bi bi-image"></i> Cambiar foto de perfil
                         </label>
-                        <input type="text"
+                        <input type="file"
                                class="form-control"
-                               id="nombre"
-                               name="Nombre"
-                               value="@Model.Nombre"
-                               required>
+                               id="foto"
+                               name="Foto"
+                               accept="image/jpeg,image/png,image/gif"
+                               onchange="previewImage(this)">
+                        <small class="text-muted d-block text-center">Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
                     </div>
 
-                    <div class="col-md-6">
-                        <label for="correo" class="form-label">
-                            <i class="bi bi-envelope"></i> Correo electrónico
-                        </label>
-                        <input type="email"
-                               class="form-control"
-                               id="correo"
-                               name="Correo"
-                               value="@Model.Correo"
-                               required>
+                    <div class="divider"></div>
+
+                    <!-- Campos del formulario -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">
+                                <i class="bi bi-person-badge"></i> Nombre completo
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="nombre"
+                                   name="Nombre"
+                                   value="@Model.Nombre"
+                                   placeholder="Tu nombre completo"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="correo" class="form-label">
+                                <i class="bi bi-envelope"></i> Correo electrónico
+                            </label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="correo"
+                                   name="Correo"
+                                   value="@Model.Correo"
+                                   placeholder="tu@email.com"
+                                   required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="contraseña" class="form-label">
+                                <i class="bi bi-lock"></i> Nueva contraseña
+                            </label>
+                            <input type="password"
+                                   class="form-control"
+                                   id="contraseña"
+                                   name="Contraseña"
+                                   placeholder="Dejar en blanco para mantener la actual">
+                            <small class="text-muted">Solo completa este campo si deseas cambiar tu contraseña</small>
+                        </div>
                     </div>
 
-                    <div class="col-12">
-                        <label for="contraseña" class="form-label">
-                            <i class="bi bi-lock"></i> Nueva contraseña
-                        </label>
-                        <input type="password"
-                               class="form-control"
-                               id="contraseña"
-                               name="Contraseña"
-                               placeholder="Dejar en blanco para mantener la actual">
-                        <small class="text-muted">Solo completa este campo si deseas cambiar tu contraseña</small>
-                    </div>
-                </div>
+                    <div class="divider"></div>
 
-                <div class="divider"></div>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-save"></i> Guardar Cambios
-                        </button>
+                    <!-- Botones de acción -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-save w-100">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a asp-controller="Libro" asp-action="Create" class="btn btn-publish w-100">
+                                <i class="bi bi-plus-circle"></i> Publicar Libro
+                            </a>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <a asp-controller="Libro" asp-action="Create" class="btn btn-secondary w-100">
-                            <i class="bi bi-plus-circle"></i> Publicar Libro
-                        </a>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     }
 </div>

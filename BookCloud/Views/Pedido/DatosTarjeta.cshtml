@@ -5,106 +5,270 @@
     ViewData["Title"] = "Datos de la Tarjeta";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <h1 class="section-title">
-                <i class="bi bi-credit-card-2-front"></i> Datos de la Tarjeta
-            </h1>
+<style>
+    .payment-container {
+        max-width: 600px;
+        margin: 2rem auto;
+    }
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="summary-row">
-                        <span class="h5">Total a pagar:</span>
-                        <span class="h4 text-gold">$@Model.Total.ToString("N2")</span>
-                    </div>
-                </div>
-            </div>
+    .payment-card {
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        margin-bottom: 2rem;
+    }
 
-            <div class="card">
-                <div class="card-body">
-                    <form asp-action="ProcesarPagoTarjeta" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    .payment-header {
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        color: var(--verde-fondo);
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
 
-                        <input type="hidden" asp-for="Total" />
+    .payment-header h1 {
+        color: var(--verde-fondo);
+        font-weight: 700;
+        margin: 0;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="NumeroTarjeta" class="form-label">
-                                <i class="bi bi-credit-card"></i> Número de tarjeta
-                            </label>
-                            <input asp-for="NumeroTarjeta" 
-                                   class="form-control" 
-                                   placeholder="1234 5678 9012 3456"
-                                   maxlength="16"
-                                   inputmode="numeric"
-                                   pattern="[0-9]*" />
-                            <span asp-validation-for="NumeroTarjeta" class="text-danger"></span>
-                            <small class="form-text text-muted">
-                                <i class="bi bi-shield-check"></i> Pago 100% seguro y encriptado
-                            </small>
-                        </div>
+    .total-display {
+        background: rgba(11, 31, 26, 0.3);
+        border: 2px solid var(--dorado);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
 
-                        <div class="mb-3">
-                            <label asp-for="NombreTitular" class="form-label">
-                                <i class="bi bi-person"></i> Nombre del titular
-                            </label>
-                            <input asp-for="NombreTitular" 
-                                   class="form-control" 
-                                   placeholder="Como aparece en la tarjeta"
-                                   style="text-transform: uppercase;" />
-                            <span asp-validation-for="NombreTitular" class="text-danger"></span>
-                        </div>
+    .total-label {
+        color: var(--texto-secundario);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="FechaVencimiento" class="form-label">
-                                    <i class="bi bi-calendar"></i> Fecha de vencimiento
-                                </label>
-                                <input asp-for="FechaVencimiento" 
-                                       class="form-control" 
-                                       placeholder="MM/AA"
-                                       maxlength="5" />
-                                <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
-                            </div>
+    .total-amount {
+        color: var(--dorado);
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+    }
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="CVV" class="form-label">
-                                    <i class="bi bi-lock"></i> CVV
-                                </label>
-                                <input asp-for="CVV" 
-                                       class="form-control" 
-                                       placeholder="123"
-                                       maxlength="4"
-                                       type="password"
-                                       inputmode="numeric"
-                                       pattern="[0-9]*" />
-                                <span asp-validation-for="CVV" class="text-danger"></span>
-                            </div>
-                        </div>
+    .payment-card .form-label {
+        color: var(--dorado);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Pago simulado:</strong> Esta es una simulación. No se realizará ningún cargo real a tu tarjeta.
-                        </div>
+    .payment-card .form-control {
+        background: rgba(19, 47, 40, 0.5);
+        border: 2px solid var(--dorado);
+        color: var(--texto-claro);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-check-circle"></i> Confirmar Pago
-                            </button>
-                            <a asp-action="SeleccionarMetodoPago" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Volver
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    .payment-card .form-control:focus {
+        background: rgba(19, 47, 40, 0.7);
+        border-color: var(--dorado-hover);
+        box-shadow: 0 0 0 0.2rem rgba(198, 167, 94, 0.25);
+        color: var(--texto-claro);
+    }
 
-            <div class="text-center mt-3">
-                <small class="text-muted">
-                    <i class="bi bi-shield-lock"></i> Tus datos están protegidos con encriptación SSL
+    .payment-card .form-control::placeholder {
+        color: var(--texto-secundario);
+    }
+
+    .text-danger {
+        color: #FF6B6B !important;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .info-box {
+        background: rgba(37, 99, 235, 0.1);
+        border: 2px solid rgba(37, 99, 235, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box i {
+        color: #60A5FA;
+    }
+
+    .security-badge {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(198, 167, 94, 0.1);
+        border-radius: 12px;
+        margin-top: 1rem;
+    }
+
+    .security-badge i {
+        color: var(--dorado);
+        font-size: 1.2rem;
+    }
+
+    .btn-confirm {
+        background: linear-gradient(135deg, var(--dorado) 0%, #B8954F 100%);
+        border: none;
+        color: var(--verde-fondo);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(198, 167, 94, 0.4);
+    }
+
+    .btn-confirm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(198, 167, 94, 0.6);
+        color: var(--verde-fondo);
+    }
+
+    .btn-back {
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        color: var(--dorado);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(198, 167, 94, 0.1);
+        color: var(--dorado-hover);
+        border-color: var(--dorado-hover);
+    }
+</style>
+
+<div class="payment-container">
+    <div class="payment-header">
+        <h1>
+            <i class="bi bi-credit-card-2-front"></i> Pago con Tarjeta
+        </h1>
+    </div>
+
+    <div class="total-display">
+        <div class="total-label">Total a pagar</div>
+        <div class="total-amount">$@Model.Total.ToString("N2")</div>
+    </div>
+
+    <div class="payment-card">
+        <form asp-action="ProcesarPagoTarjeta" method="post" id="formPagoTarjeta">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <input type="hidden" asp-for="Total" />
+
+            <!-- Número de tarjeta -->
+            <div class="mb-3">
+                <label asp-for="NumeroTarjeta" class="form-label">
+                    <i class="bi bi-credit-card"></i> Número de tarjeta
+                </label>
+                <input asp-for="NumeroTarjeta" 
+                       class="form-control" 
+                       id="numeroTarjeta"
+                       placeholder="1234 5678 9012 3456"
+                       maxlength="19"
+                       autocomplete="off"
+                       data-lpignore="true"
+                       data-form-type="other"
+                       required />
+                <span asp-validation-for="NumeroTarjeta" class="text-danger"></span>
+                <small class="text-muted d-block mt-1">
+                    <i class="bi bi-shield-check"></i> Ingresa los 16 dígitos de tu tarjeta
                 </small>
             </div>
-        </div>
+
+            <!-- Nombre del titular -->
+            <div class="mb-3">
+                <label asp-for="NombreTitular" class="form-label">
+                    <i class="bi bi-person"></i> Nombre del titular
+                </label>
+                <input asp-for="NombreTitular" 
+                       class="form-control text-uppercase" 
+                       id="nombreTitular"
+                       placeholder="JUAN PEREZ"
+                       autocomplete="off"
+                       data-lpignore="true"
+                       data-form-type="other"
+                       required />
+                <span asp-validation-for="NombreTitular" class="text-danger"></span>
+            </div>
+
+            <!-- Fecha de vencimiento y CVV -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FechaVencimiento" class="form-label">
+                        <i class="bi bi-calendar-event"></i> Vencimiento
+                    </label>
+                    <input asp-for="FechaVencimiento" 
+                           class="form-control" 
+                           id="fechaVencimiento"
+                           placeholder="MM/AA"
+                           maxlength="5"
+                           autocomplete="off"
+                           data-lpignore="true"
+                           data-form-type="other"
+                           required />
+                    <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CVV" class="form-label">
+                        <i class="bi bi-shield-lock"></i> CVV
+                    </label>
+                    <input asp-for="CVV" 
+                           class="form-control" 
+                           id="cvv"
+                           placeholder="123"
+                           maxlength="4"
+                           type="password"
+                           autocomplete="off"
+                           data-lpignore="true"
+                           data-form-type="other"
+                           required />
+                    <span asp-validation-for="CVV" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Información -->
+            <div class="info-box">
+                <i class="bi bi-info-circle"></i>
+                <strong> Pago simulado:</strong> Esta es una demostración. No se realizará ningún cargo real.
+            </div>
+
+            <!-- Botones -->
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-confirm">
+                    <i class="bi bi-check-circle"></i> Confirmar Pago de $@Model.Total.ToString("N2")
+                </button>
+                <a asp-action="SeleccionarMetodoPago" class="btn btn-back">
+                    <i class="bi bi-arrow-left"></i> Cambiar método de pago
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Badge de seguridad -->
+    <div class="security-badge">
+        <i class="bi bi-shield-lock-fill"></i>
+        <small class="d-block mt-2" style="color: var(--texto-secundario);">
+            Tus datos están protegidos con encriptación SSL de 256 bits
+        </small>
     </div>
 </div>
 
@@ -112,23 +276,161 @@
     <partial name="_ValidationScriptsPartial" />
     
     <script>
-        // Formatear número de tarjeta automáticamente
-        document.querySelector('[name="NumeroTarjeta"]').addEventListener('input', function(e) {
-            this.value = this.value.replace(/\D/g, '');
-        });
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener referencias a los campos
+            const numeroTarjetaInput = document.getElementById('numeroTarjeta');
+            const fechaVencimientoInput = document.getElementById('fechaVencimiento');
+            const cvvInput = document.getElementById('cvv');
+            const nombreTitularInput = document.getElementById('nombreTitular');
+            const formPagoTarjeta = document.getElementById('formPagoTarjeta');
 
-        // Formatear fecha de vencimiento (MM/AA)
-        document.querySelector('[name="FechaVencimiento"]').addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            // Verificar que los elementos existen
+            if (!numeroTarjetaInput || !fechaVencimientoInput || !cvvInput || !nombreTitularInput || !formPagoTarjeta) {
+                console.error('No se encontraron todos los elementos del formulario');
+                return;
             }
-            this.value = value;
-        });
 
-        // Solo números en CVV
-        document.querySelector('[name="CVV"]').addEventListener('input', function(e) {
-            this.value = this.value.replace(/\D/g, '');
+            // Limpiar formulario al cargar (para evitar que el navegador lo autocomplete)
+            setTimeout(function() {
+                if (!numeroTarjetaInput.value || numeroTarjetaInput.value === '@Model.NumeroTarjeta') {
+                    numeroTarjetaInput.value = '';
+                }
+                if (!fechaVencimientoInput.value || fechaVencimientoInput.value === '@Model.FechaVencimiento') {
+                    fechaVencimientoInput.value = '';
+                }
+                if (!cvvInput.value || cvvInput.value === '@Model.CVV') {
+                    cvvInput.value = '';
+                }
+                if (!nombreTitularInput.value || nombreTitularInput.value === '@Model.NombreTitular') {
+                    nombreTitularInput.value = '';
+                }
+            }, 100);
+
+            // Formatear número de tarjeta con espacios
+            numeroTarjetaInput.addEventListener('input', function (e) {
+                const cursorPosition = e.target.selectionStart;
+                const previousValue = e.target.value;
+                
+                // Limpiar y formatear (solo números)
+                let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                
+                e.target.value = formattedValue;
+                
+                // Restaurar posición del cursor
+                if (previousValue.length < formattedValue.length) {
+                    e.target.setSelectionRange(cursorPosition + 1, cursorPosition + 1);
+                }
+            });
+
+            // Formatear fecha de vencimiento MM/AA
+            fechaVencimientoInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                }
+                
+                e.target.value = value;
+            });
+
+            // Solo números en CVV
+            cvvInput.addEventListener('input', function (e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+
+            // Mayúsculas en nombre del titular
+            nombreTitularInput.addEventListener('input', function (e) {
+                e.target.value = e.target.value.toUpperCase();
+            });
+
+            // Limpiar campos al cargar si hay errores de validación
+            const validationErrors = document.querySelectorAll('.text-danger');
+            if (validationErrors.length > 0) {
+                numeroTarjetaInput.removeAttribute('readonly');
+                fechaVencimientoInput.removeAttribute('readonly');
+                cvvInput.removeAttribute('readonly');
+                nombreTitularInput.removeAttribute('readonly');
+            }
+
+            // Validación antes de enviar
+            formPagoTarjeta.addEventListener('submit', function(e) {
+                // Remover readonly si existe
+                numeroTarjetaInput.removeAttribute('readonly');
+                fechaVencimientoInput.removeAttribute('readonly');
+                cvvInput.removeAttribute('readonly');
+                nombreTitularInput.removeAttribute('readonly');
+                
+                // ? CORRECCIÓN: Validar número de tarjeta sin espacios
+                const numeroTarjetaSinEspacios = numeroTarjetaInput.value.replace(/\s/g, '');
+                console.log('Número de tarjeta (sin espacios):', numeroTarjetaSinEspacios);
+                console.log('Longitud:', numeroTarjetaSinEspacios.length);
+                
+                if (numeroTarjetaSinEspacios.length < 13 || numeroTarjetaSinEspacios.length > 19) {
+                    e.preventDefault();
+                    alert(`El número de tarjeta debe tener entre 13 y 19 dígitos. Actualmente tiene ${numeroTarjetaSinEspacios.length} dígitos.`);
+                    numeroTarjetaInput.focus();
+                    return false;
+                }
+                
+                // Validar que sea solo números
+                if (!/^\d+$/.test(numeroTarjetaSinEspacios)) {
+                    e.preventDefault();
+                    alert('El número de tarjeta solo puede contener dígitos');
+                    numeroTarjetaInput.focus();
+                    return false;
+                }
+                
+                // Validar fecha de vencimiento
+                const fecha = fechaVencimientoInput.value;
+                if (!/^\d{2}\/\d{2}$/.test(fecha)) {
+                    e.preventDefault();
+                    alert('La fecha de vencimiento debe tener el formato MM/AA');
+                    fechaVencimientoInput.focus();
+                    return false;
+                }
+                
+                // Validar CVV
+                const cvv = cvvInput.value;
+                if (cvv.length < 3 || cvv.length > 4) {
+                    e.preventDefault();
+                    alert('El CVV debe tener 3 o 4 dígitos');
+                    cvvInput.focus();
+                    return false;
+                }
+                
+                // Validar nombre
+                const nombre = nombreTitularInput.value.trim();
+                if (nombre.length < 3) {
+                    e.preventDefault();
+                    alert('El nombre del titular debe tener al menos 3 caracteres');
+                    nombreTitularInput.focus();
+                    return false;
+                }
+                
+                // Si todo está OK, limpiar campos después de un delay (para que se envíe primero)
+                setTimeout(function() {
+                    numeroTarjetaInput.value = '';
+                    fechaVencimientoInput.value = '';
+                    cvvInput.value = '';
+                    nombreTitularInput.value = '';
+                }, 100);
+            });
+
+            // Permitir que los campos sean editables al hacer clic
+            [numeroTarjetaInput, fechaVencimientoInput, cvvInput, nombreTitularInput].forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.removeAttribute('readonly');
+                });
+                
+                // ? Limpiar campo cuando pierde el foco si está vacío (evitar autocomplete)
+                input.addEventListener('blur', function() {
+                    if (this.value.trim() === '') {
+                        this.value = '';
+                    }
+                });
+            });
         });
     </script>
 }

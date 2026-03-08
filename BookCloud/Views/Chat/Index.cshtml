@@ -5,69 +5,75 @@
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4"><i class="bi bi-chat-dots-fill"></i> Mis Conversaciones</h2>
+    <h1 class="section-title">
+        <i class="bi bi-chat-dots-fill"></i> Mis Conversaciones
+    </h1>
 
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No tienes conversaciones aún. ¡Empieza a chatear con otros usuarios desde sus libros!
+        <div class="empty-state">
+            <i class="bi bi-chat-dots" style="font-size: 4rem; color: var(--dorado); opacity: 0.5;"></i>
+            <h3 class="mt-3">No tienes conversaciones</h3>
+            <p class="text-muted">¡Empieza a chatear con otros usuarios desde sus libros!</p>
+            <a asp-controller="Libro" asp-action="Index" class="btn btn-primary mt-3">
+                <i class="bi bi-book"></i> Explorar Libros
+            </a>
         </div>
     }
     else
     {
-        <div class="list-group">
+        <div class="chat-list">
             @foreach (var chat in Model)
             {
                 var otroUsuario = chat.Usuario1Id == usuarioActualId ? chat.Usuario2 : chat.Usuario1;
                 var ultimoMensaje = chat.Mensajes.FirstOrDefault();
                 
                 <a href="@Url.Action("Conversacion", new { id = chat.Id })" 
-                   class="list-group-item list-group-item-action hover-shadow">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img src="@(otroUsuario?.Foto ?? "/images/default-avatar.png")" 
-                                 alt="@otroUsuario?.Nombre"
-                                 class="rounded-circle me-3 border"
-                                 style="width: 55px; height: 55px; object-fit: cover;">
-                            <div>
-                                <h5 class="mb-1 fw-bold">@otroUsuario?.Nombre</h5>
-                                @if (ultimoMensaje != null)
-                                {
-                                    <p class="mb-0 text-muted small">
-                                        @{
-                                            var texto = ultimoMensaje.Contenido;
-                                            var maxLength = 60;
-                                        }
-                                        @(texto.Length > maxLength ? texto.Substring(0, maxLength) + "..." : texto)
-                                    </p>
-                                }
-                                else
-                                {
-                                    <p class="mb-0 text-muted small fst-italic">Sin mensajes</p>
-                                }
-                            </div>
+                   class="chat-item">
+                    <div class="chat-avatar">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                             style="width: 55px; height: 55px; font-weight: bold; font-size: 1.5rem;">
+                            @otroUsuario?.Nombre?.Substring(0, 1).ToUpper()
                         </div>
-                        @if (ultimoMensaje != null)
-                        {
-                            <small class="text-muted">
-                                @{
-                                    var diff = DateTime.Now - ultimoMensaje.FechaEnvio;
-                                    var tiempo = diff.TotalDays >= 1 
-                                        ? ultimoMensaje.FechaEnvio.ToString("dd/MM") 
-                                        : ultimoMensaje.FechaEnvio.ToString("HH:mm");
-                                }
-                                @tiempo
-                            </small>
-                        }
                     </div>
+                    <div class="chat-content">
+                        <div class="chat-header">
+                            <h5 class="chat-name">@otroUsuario?.Nombre</h5>
+                            @if (ultimoMensaje != null)
+                            {
+                                <small class="chat-time">
+                                    @{
+                                        var diff = DateTime.Now - ultimoMensaje.FechaEnvio;
+                                        var tiempo = diff.TotalDays >= 1 
+                                            ? ultimoMensaje.FechaEnvio.ToString("dd/MM") 
+                                            : ultimoMensaje.FechaEnvio.ToString("HH:mm");
+                                    }
+                                    @tiempo
+                                </small>
+                            }
+                        </div>
+                        <p class="chat-preview">
+                            @if (ultimoMensaje != null)
+                            {
+                                var texto = ultimoMensaje.Contenido;
+                                var maxLength = 60;
+                                @(texto.Length > maxLength ? texto.Substring(0, maxLength) + "..." : texto)
+                            }
+                            else
+                            {
+                                <span class="fst-italic">Sin mensajes</span>
+                            }
+                        </p>
+                    </div>
+                    <i class="bi bi-chevron-right chat-arrow"></i>
                 </a>
             }
         </div>
@@ -75,11 +81,95 @@
 </div>
 
 <style>
-    .hover-shadow {
+    .chat-list {
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-item {
+        display: flex;
+        align-items: center;
+        padding: 1.2rem 1.5rem;
+        background: var(--verde-card);
+        border-bottom: 1px solid rgba(198, 167, 94, 0.2);
+        text-decoration: none;
+        color: var(--texto-claro);
         transition: all 0.3s ease;
     }
-    .hover-shadow:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
+
+    .chat-item:last-child {
+        border-bottom: none;
+    }
+
+    .chat-item:hover {
+        background: rgba(198, 167, 94, 0.1);
+        padding-left: 2rem;
+        transform: translateX(5px);
+    }
+
+    .chat-avatar {
+        flex-shrink: 0;
+        margin-right: 1.2rem;
+    }
+
+    .chat-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.3rem;
+    }
+
+    .chat-name {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dorado);
+    }
+
+    .chat-time {
+        color: var(--texto-secundario);
+        font-size: 0.85rem;
+    }
+
+    .chat-preview {
+        margin: 0;
+        color: var(--texto-secundario);
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chat-arrow {
+        color: var(--dorado);
+        font-size: 1.2rem;
+        margin-left: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .chat-item:hover .chat-arrow {
+        transform: translateX(5px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--verde-card);
+        border: 2px solid var(--dorado);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .empty-state h3 {
+        color: var(--texto-claro);
+        margin-bottom: 0.5rem;
     }
 </style>

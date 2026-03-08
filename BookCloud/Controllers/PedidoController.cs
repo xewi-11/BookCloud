@@ -117,6 +117,11 @@ namespace BookCloud.Controllers
         {
             if (!ModelState.IsValid)
             {
+                // ✅ Limpiar datos sensibles antes de devolver la vista
+                model.NumeroTarjeta = "";
+                model.CVV = "";
+                model.FechaVencimiento = "";
+                model.NombreTitular = "";
                 return View("DatosTarjeta", model);
             }
 
@@ -136,10 +141,18 @@ namespace BookCloud.Controllers
                 var userId = int.Parse(usuarioId);
                 var total = carrito.Sum(i => i.Subtotal);
 
-                // Simulación de validación de tarjeta
+                // Simulación de validación de tarjeta (limpiar espacios para validar)
+                var numeroTarjetaLimpio = model.NumeroTarjeta.Replace(" ", "");
+                model.NumeroTarjeta = numeroTarjetaLimpio; // Guardar sin espacios
+
                 if (!ValidarTarjeta(model))
                 {
                     ModelState.AddModelError("", "Error al procesar el pago. Verifique los datos de la tarjeta.");
+                    // ✅ Limpiar datos sensibles
+                    model.NumeroTarjeta = "";
+                    model.CVV = "";
+                    model.FechaVencimiento = "";
+                    model.NombreTitular = "";
                     return View("DatosTarjeta", model);
                 }
 
@@ -166,6 +179,9 @@ namespace BookCloud.Controllers
                     Activo = true
                 };
                 await _repoPagos.CrearPago(pago);
+
+                // ✅ Transferir saldo a los vendedores
+                await _repoWallet.TransferirSaldoAVendedores(pedidoId, userId);
 
                 // Actualizar estado del pedido
                 await _repoPedidos.ActualizarEstadoPedido(pedidoId, "Completado");
@@ -245,6 +261,9 @@ namespace BookCloud.Controllers
                     };
                     await _repoPagos.CrearPago(pago);
 
+                    // ✅ Transferir saldo a los vendedores
+                    await _repoWallet.TransferirSaldoAVendedores(pedidoId, userId);
+
                     // Actualizar estado del pedido
                     await _repoPedidos.ActualizarEstadoPedido(pedidoId, "Completado");
 
@@ -273,6 +292,17 @@ namespace BookCloud.Controllers
 
         private bool ValidarNumeroTarjetaLuhn(string numero)
         {
+            // ✅ Limpiar espacios antes de validar
+            numero = numero?.Replace(" ", "") ?? "";
+
+            // Validar que solo contiene dígitos
+            if (string.IsNullOrEmpty(numero) || !numero.All(char.IsDigit))
+                return false;
+
+            // Validar longitud
+            if (numero.Length < 13 || numero.Length > 19)
+                return false;
+
             // Algoritmo de Luhn para validar números de tarjeta
             int suma = 0;
             bool alternar = false;
@@ -318,8 +348,10 @@ namespace BookCloud.Controllers
             if (string.IsNullOrEmpty(usuarioId))
                 return RedirectToAction("Login", "Auth");
 
+            // You likely want to get the user's orders and return a view.
             var pedidos = await _repoPedidos.GetPedidosUsuario(int.Parse(usuarioId));
             return View(pedidos);
         }
     }
 }
+
