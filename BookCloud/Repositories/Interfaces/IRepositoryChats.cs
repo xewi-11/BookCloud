@@ -9,6 +9,7 @@ namespace BookCloud.Repositories.Interfaces
         Task<Chat?> ObtenerChatPorIdAsync(int chatId);
         Task<List<Mensaje>> ObtenerMensajesDelChatAsync(int chatId, int take = 50);
         Task<Mensaje> EnviarMensajeAsync(int chatId, int remitenteId, string contenido);
+        Task<Mensaje> EnviarUbicacionAsync(int chatId, int remitenteId, decimal latitud, decimal longitud);
         Task<bool> UsuarioPerteneceChatAsync(int chatId, int usuarioId);
     }
 }

@@ -33,12 +33,48 @@ namespace BookCloud.Hubs
                     remitenteId = mensaje.RemitenteId,
                     remitenteNombre = mensaje.Remitente?.Nombre ?? "Usuario",
                     contenido = mensaje.Contenido,
-                    fechaEnvio = mensaje.FechaEnvio.ToString("HH:mm")
+                    fechaEnvio = mensaje.FechaEnvio.ToString("HH:mm"),
+                    tieneUbicacion = mensaje.TieneUbicacion,
+                    latitud = mensaje.Latitud,
+                    longitud = mensaje.Longitud
                 });
             }
             catch (Exception ex)
             {
                 throw new HubException($"Error al enviar mensaje: {ex.Message}");
+            }
+        }
+
+        public async Task EnviarUbicacion(int chatId, int usuarioId, decimal latitud, decimal longitud)
+        {
+            try
+            {
+                // Verificar que el usuario pertenezca al chat
+                if (!await _repositoryChats.UsuarioPerteneceChatAsync(chatId, usuarioId))
+                {
+                    throw new HubException("No tienes permiso para enviar mensajes en este chat");
+                }
+
+                // Guardar mensaje con ubicación en BD
+                var mensaje = await _repositoryChats.EnviarUbicacionAsync(chatId, usuarioId, latitud, longitud);
+
+                // Enviar mensaje a todos los clientes conectados a este chat
+                await Clients.Group($"Chat_{chatId}").SendAsync("RecibirMensaje", new
+                {
+                    id = mensaje.Id,
+                    chatId = mensaje.ChatId,
+                    remitenteId = mensaje.RemitenteId,
+                    remitenteNombre = mensaje.Remitente?.Nombre ?? "Usuario",
+                    contenido = mensaje.Contenido,
+                    fechaEnvio = mensaje.FechaEnvio.ToString("HH:mm"),
+                    tieneUbicacion = mensaje.TieneUbicacion,
+                    latitud = mensaje.Latitud,
+                    longitud = mensaje.Longitud
+                });
+            }
+            catch (Exception ex)
+            {
+                throw new HubException($"Error al enviar ubicación: {ex.Message}");
             }
         }
 

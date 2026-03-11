@@ -131,7 +131,118 @@
         box-shadow: 0 6px 16px rgba(198, 167, 94, 0.6);
     }
 
+    .chat-input .btn-outline-warning {
+        border: 2px solid var(--dorado);
+        color: var(--dorado);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input .btn-outline-warning:hover {
+        background: var(--dorado);
+        color: var(--verde-fondo);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(198, 167, 94, 0.6);
+    }
+
+    /* Estilos para mensajes con ubicación */
+    .location-map {
+        width: 300px;
+        height: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .location-link {
+        display: inline-block;
+        margin-top: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .location-link:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .message-bubble.other .location-link {
+        color: white;
+    }
+
+    .message-bubble.me .location-link {
+        color: var(--verde-fondo);
+    }
+
     /* Avatares de mensajes */
+
+
+    .chat-input .btn-outline-warning {
+        border: 2px solid var(--dorado);
+        color: var(--dorado);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+
+        .chat-input .btn-outline-warning:hover {
+            background: var(--dorado);
+            color: var(--verde-fondo);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(198, 167, 94, 0.6);
+        }
+
+    /* Estilos para mensajes con ubicación */
+    .location-map {
+        width: 300px;
+        height: 200px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .location-link {
+        display: inline-block;
+        margin-top: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+        .location-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+    .message-bubble.other .location-link {
+        color: white;
+    }
+
+    .message-bubble.me .location-link {
+        color: var(--verde-fondo);
+    }
+    /* Estilos para mensajes con ubicación */
+
     .message-avatar {
         width: 36px;
         height: 36px;
@@ -325,6 +436,28 @@
                         }
                         <div class="message-bubble @(esMio ? "me" : "other")">
                             <p>@mensaje.Contenido</p>
+                            @if (mensaje.TieneUbicacion && mensaje.Latitud.HasValue && mensaje.Longitud.HasValue)
+                            {
+                                <div class="location-map" id="map-@mensaje.Id"></div>
+                                <a href="https://www.google.com/maps?q=@mensaje.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),@mensaje.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" 
+                                   target="_blank" 
+                                   class="location-link">
+                                    <i class="bi bi-map"></i> Ver en Google Maps
+                                </a>
+                                <script>
+                                    (function() {
+                                        var map = L.map('map-@mensaje.Id', {
+                                            center: [@mensaje.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), @mensaje.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)],
+                                            zoom: 15,
+                                            scrollWheelZoom: false
+                                        });
+                                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                            attribution: '&copy; OpenStreetMap contributors'
+                                        }).addTo(map);
+                                        L.marker([@mensaje.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), @mensaje.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)]).addTo(map);
+                                    })();
+                                </script>
+                            }
                             <small class="message-time @(esMio ? "me" : "other") d-block text-end">
                                 @mensaje.FechaEnvio.ToString("HH:mm")
                             </small>
@@ -352,6 +485,12 @@
         <!-- Input de mensaje -->
         <div class="chat-input">
             <form id="formMensaje" class="d-flex gap-2 align-items-center">
+                <button type="button" 
+                        id="btnCompartirUbicacion" 
+                        class="btn btn-outline-warning"
+                        title="Compartir ubicación">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </button>
                 <input type="text" 
                        id="inputMensaje" 
                        class="form-control" 
@@ -421,6 +560,56 @@
             }
         });
 
+        document.getElementById("btnCompartirUbicacion").addEventListener("click", async () => {
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización");
+                return;
+            }
+
+            const btn = document.getElementById("btnCompartirUbicacion");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        const latitud = position.coords.latitude;
+                        const longitud = position.coords.longitude;
+
+                        await connection.invoke("EnviarUbicacion", chatId, usuarioActualId, latitud, longitud);
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                    } catch (err) {
+                        console.error("❌ Error al enviar ubicación:", err);
+                        alert("Error al enviar la ubicación. Intenta de nuevo.");
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                    }
+                },
+                (error) => {
+                    console.error("❌ Error de geolocalización:", error);
+                    let mensaje = "No se pudo obtener tu ubicación. ";
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            mensaje += "Debes permitir el acceso a tu ubicación.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mensaje += "La información de ubicación no está disponible.";
+                            break;
+                        case error.TIMEOUT:
+                            mensaje += "La solicitud ha excedido el tiempo de espera.";
+                            break;
+                    }
+                    
+                    alert(mensaje);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i>';
+                }
+            );
+        });
+
         function agregarMensajeAlDOM(mensaje) {
             const container = document.getElementById("mensajesContainer");
             const esMio = mensaje.remitenteId === usuarioActualId;
@@ -431,11 +620,28 @@
             const timeClass = esMio ? 'me' : 'other';
             const justifyClass = esMio ? 'justify-content-end' : 'justify-content-start';
             
+            const mapId = `map-${mensaje.id}`;
+            let locationHTML = '';
+            
+            if (mensaje.tieneUbicacion && mensaje.latitud && mensaje.longitud) {
+                const linkColor = esMio ? 'color: var(--verde-fondo);' : 'color: white;';
+                locationHTML = `
+                    <div class="location-map" id="${mapId}"></div>
+                    <a href="https://www.google.com/maps?q=${mensaje.latitud},${mensaje.longitud}" 
+                       target="_blank" 
+                       class="location-link"
+                       style="${linkColor}">
+                        <i class="bi bi-map"></i> Ver en Google Maps
+                    </a>
+                `;
+            }
+            
             const mensajeHTML = `
                 <div class="d-flex mb-3 ${justifyClass}" data-mensaje-id="${mensaje.id}">
                     ${!esMio ? `<div class="message-avatar other me-2" style="align-self: end;">${inicial}</div>` : ''}
                     <div class="message-bubble ${bubbleClass}">
                         <p>${escapeHtml(mensaje.contenido)}</p>
+                        ${locationHTML}
                         <small class="message-time ${timeClass} d-block text-end">
                             ${mensaje.fechaEnvio}
                         </small>
@@ -445,6 +651,22 @@
             `;
             
             container.insertAdjacentHTML('beforeend', mensajeHTML);
+            
+            // Si el mensaje tiene ubicación, inicializar el mapa
+            if (mensaje.tieneUbicacion && mensaje.latitud && mensaje.longitud) {
+                setTimeout(() => {
+                    const map = L.map(mapId, {
+                        center: [mensaje.latitud, mensaje.longitud],
+                        zoom: 15,
+                        scrollWheelZoom: false
+                    });
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+                    L.marker([mensaje.latitud, mensaje.longitud]).addTo(map);
+                }, 100);
+            }
+            
             scrollToBottom();
         }
 

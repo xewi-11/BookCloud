@@ -95,7 +95,33 @@ namespace BookCloud.Repositories
                 RemitenteId = remitenteId,
                 Contenido = contenido,
                 FechaEnvio = DateTime.Now,
-                Activo = true
+                Activo = true,
+                TieneUbicacion = false
+            };
+
+            _context.Mensajes.Add(mensaje);
+            await _context.SaveChangesAsync();
+
+            // Cargar el remitente para devolverlo completo
+            await _context.Entry(mensaje)
+                .Reference(m => m.Remitente)
+                .LoadAsync();
+
+            return mensaje;
+        }
+
+        public async Task<Mensaje> EnviarUbicacionAsync(int chatId, int remitenteId, decimal latitud, decimal longitud)
+        {
+            var mensaje = new Mensaje
+            {
+                ChatId = chatId,
+                RemitenteId = remitenteId,
+                Contenido = $"?? Ubicación compartida",
+                FechaEnvio = DateTime.Now,
+                Activo = true,
+                TieneUbicacion = true,
+                Latitud = latitud,
+                Longitud = longitud
             };
 
             _context.Mensajes.Add(mensaje);

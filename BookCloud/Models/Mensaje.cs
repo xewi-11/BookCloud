@@ -29,6 +29,15 @@ namespace BookCloud.Models
         [Column("Activo")]
         public bool Activo { get; set; }
 
+        [Column("Latitud")]
+        public decimal? Latitud { get; set; }
+
+        [Column("Longitud")]
+        public decimal? Longitud { get; set; }
+
+        [Column("TieneUbicacion")]
+        public bool TieneUbicacion { get; set; }
+
         [ForeignKey("ChatId")]
         public Chat Chat { get; set; }
 
